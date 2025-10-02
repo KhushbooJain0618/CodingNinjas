@@ -1,11 +1,11 @@
 // src/app/api/resume/[filename]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-export async function GET(req: Request, { params }: { params: { filename: string } }) {
+export async function GET(req: NextRequest, context: { params: { filename: string } }) {
   try {
-    const { filename } = params;
+    const { filename } = context.params;
     const filePath = path.join("/tmp", filename);
 
     if (!fs.existsSync(filePath)) {
@@ -17,12 +17,14 @@ export async function GET(req: Request, { params }: { params: { filename: string
     let contentType = "application/octet-stream";
 
     if (ext === ".pdf") contentType = "application/pdf";
-    else if (ext === ".docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    else if (ext === ".docx")
+      contentType =
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     else if (ext === ".doc") contentType = "application/msword";
 
     return new Response(fileBuffer, {
       status: 200,
-      headers: { "Content-Type": contentType }
+      headers: { "Content-Type": contentType },
     });
   } catch (err) {
     console.error(err);
