@@ -121,13 +121,12 @@ export default function AdminDashboard() {
           <span className="text-xs font-medium text-gray-500">Resume</span>
           {app.resumeUrl ? (
             <a
-              href={app.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-orange-500 hover:text-orange-400 font-semibold underline transition-colors"
-            >
-              View Resume
-            </a>
+            href={`/api/resume/${app.resumeUrl.split("/tmp/")[1]}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Resume
+          </a>
           ) : (
             <span className="text-gray-500">No resume uploaded</span>
           )}

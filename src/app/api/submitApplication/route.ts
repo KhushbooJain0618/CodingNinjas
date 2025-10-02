@@ -64,22 +64,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Handle resume file upload to /public/resumes
+    // Handle resume file upload to /tmp
     let resumeUrl = "";
     if (resumeFile) {
-      const resumesDir = path.join(process.cwd(), "public", "resumes");
-      if (!fs.existsSync(resumesDir)) fs.mkdirSync(resumesDir, { recursive: true });
+      const tmpDir = path.join("/tmp");
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 
       const arrayBuffer = await resumeFile.arrayBuffer();
       const timestamp = Date.now();
       const safeFileName = `${timestamp}-${resumeFile.name}`;
-      const filePath = path.join(resumesDir, safeFileName);
+      const tmpPath = path.join(tmpDir, safeFileName);
 
-      fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+      fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
 
-      // Public URL for frontend
-      resumeUrl = `/resumes/${safeFileName}`;
-      console.log("Resume saved at:", filePath);
+      // Use the tmpPath for further processing (e.g., upload to cloud)
+      // For now, we save the filename in DB
+      resumeUrl = `/tmp/${safeFileName}`;
+      console.log("Resume saved temporarily at:", tmpPath);
     }
 
     // Create hiring form document with status "pending"
