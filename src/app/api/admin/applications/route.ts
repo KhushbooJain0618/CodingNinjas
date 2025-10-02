@@ -6,15 +6,18 @@ export async function GET() {
   try {
     await connectDB();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allForms: any[] = await HiringForm.find()
       .sort({ createdAt: -1, _id: -1 })
       .lean();
 
     const pendingForms = serialize(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       allForms.filter((f: any) => (f.status ?? "pending").toLowerCase() === "pending")
     );
 
     const completedForms = serialize(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       allForms.filter((f: any) => (f.status ?? "").toLowerCase() === "approved")
     );
 
@@ -28,7 +31,9 @@ export async function GET() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const serialize = (docs: any[]) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   docs.map((d: any) => ({
     _id: d._id.toString(),
     name: d.name,
