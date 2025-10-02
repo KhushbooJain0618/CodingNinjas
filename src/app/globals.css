@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-background-card: #ffffff;
+  --color-primary-heading: #f97316; /* orange */
+  --color-text-label: #374151;      /* gray-700 */
+  --color-text-secondary: #6b7280;  /* gray-500 */
+  --color-text-tertiary: #9ca3af;   /* gray-400 */
+  --color-border-input: #d1d5db;    /* gray-300 */
+  --color-primary-ring: #f97316;    /* focus ring */
+  --color-primary-button: #f97316;
+  --color-primary-button-hover: #ea580c;
+  --color-primary-link: #f97316;
+  --color-primary-accent: #f97316;
+  --color-error: #dc2626;           /* red-600 */
 }
 
 @theme inline {

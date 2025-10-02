@@ -1,0 +1,114 @@
+// src/app/api/submitApplication/route.ts
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import { HiringForm } from "@/models/HiringForm";
+import fs from "fs";
+import path from "path";
+
+// Allowed enum values
+const GENDERS = ["Male", "Female", "Other"] as const;
+const HOSTELLER_TYPES = ["Hosteller", "Day Scholar"] as const;
+
+export async function POST(req: Request) {
+  try {
+    await connectDB();
+
+    const formData = await req.formData();
+
+    // Extract fields and trim
+    const name = (formData.get("name") as string)?.trim();
+    const rollNumber = (formData.get("rollNumber") as string)?.trim();
+    const gender = (formData.get("gender") as string)?.trim();
+    const chitkaraEmail = (formData.get("chitkaraEmail") as string)?.trim();
+    const department = (formData.get("department") as string)?.trim();
+    const group = (formData.get("group") as string)?.trim();
+    const specialization = (formData.get("specialization") as string)?.trim();
+    const hosteller = (formData.get("hosteller") as string)?.trim();
+    const position = (formData.get("position") as string)?.trim();
+    const role = (formData.get("role") as string)?.trim();
+
+    const resumeFileEntry = formData.get("resume");
+    const resumeFile = resumeFileEntry instanceof File ? resumeFileEntry : null;
+
+    // ✅ Validate required fields
+    if (
+      !name ||
+      !rollNumber ||
+      !gender ||
+      !chitkaraEmail ||
+      !department ||
+      !group ||
+      !specialization ||
+      !hosteller ||
+      !position ||
+      !role
+    ) {
+      return NextResponse.json(
+        { success: false, error: "All fields are required" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Validate enum values
+    if (!GENDERS.includes(gender as typeof GENDERS[number])) {
+      return NextResponse.json(
+        { success: false, error: "Invalid gender selected" },
+        { status: 400 }
+      );
+    }
+
+    if (!HOSTELLER_TYPES.includes(hosteller as typeof HOSTELLER_TYPES[number])) {
+      return NextResponse.json(
+        { success: false, error: "Invalid hosteller type selected" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Handle resume file upload
+    let resumeUrl = "";
+    if (resumeFile) {
+      const uploadsDir = path.join(process.cwd(), "public", "resumes");
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+      const arrayBuffer = await resumeFile.arrayBuffer();
+
+      // ✅ Create unique filename to prevent overwriting
+      const timestamp = Date.now();
+      const safeFileName = `${timestamp}-${resumeFile.name}`;
+      const filePath = path.join(uploadsDir, safeFileName);
+
+      // Save the file
+      fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+
+      // ✅ Save the unique filename in resumeUrl
+      resumeUrl = `/resumes/${safeFileName}`; // <--- THIS is crucial
+
+    }
+
+    // Create hiring form document with status "pending"
+    const application = await HiringForm.create({
+  name,
+  rollNumber,
+  gender,
+  chitkaraEmail,
+  department,
+  group,
+  specialization,
+  hosteller,
+  position,
+  role,
+  resumeUrl,
+  status: "pending", // crucial
+});
+
+
+    // Return response without internal fields
+    const applicationData = application.toObject();
+    delete applicationData.__v;
+
+    return NextResponse.json({ success: true, application: applicationData }, { status: 201 });
+  } catch (err: any) {
+    console.error("❌ Error saving application:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
