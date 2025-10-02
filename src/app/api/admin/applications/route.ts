@@ -1,49 +1,48 @@
-// src/app/api/admin/applications/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { HiringForm, IHiringForm } from "@/models/HiringForm"; // make sure IHiringForm is exported
-import { Types } from "mongoose";
-
-// Type-safe serializer
-const serialize = (docs: IHiringForm[]) =>
-  docs.map(d => ({
-    ...d,
-    _id: (d._id as Types.ObjectId).toString(),
-    createdAt: d.createdAt ?? (d._id as Types.ObjectId).getTimestamp(),
-    updatedAt: d.updatedAt ?? (d._id as Types.ObjectId).getTimestamp(),
-    status: d.status ?? "pending",
-  }));
+import { HiringForm } from "@/models/HiringForm";
 
 export async function GET() {
   try {
     await connectDB();
 
-    // Fetch all forms
-    const allForms: IHiringForm[] = await HiringForm.find()
-  .sort({ createdAt: -1, _id: -1 }); // no .lean()
+    const allForms: any[] = await HiringForm.find()
+      .sort({ createdAt: -1, _id: -1 })
+      .lean();
 
-
-    // Filter by status safely
     const pendingForms = serialize(
-      allForms.filter(f => f.status === "pending" || !f.status)
+      allForms.filter((f: any) => (f.status ?? "pending").toLowerCase() === "pending")
     );
+
     const completedForms = serialize(
-      allForms.filter(f => f.status === "approved")
+      allForms.filter((f: any) => (f.status ?? "").toLowerCase() === "approved")
     );
 
     return NextResponse.json({ pendingForms, completedForms }, { status: 200 });
-  } catch (err: unknown) {
-    let message = "Failed to fetch hiring forms";
-
-    if (err instanceof Error) {
-      message = err.message;
-    }
-
-    console.error("❌ Failed to fetch hiring forms:", message);
-
+  } catch (err) {
+    console.error("❌ Failed to fetch hiring forms:", err);
     return NextResponse.json(
-      { pendingForms: [], completedForms: [], error: message },
+      { pendingForms: [], completedForms: [], error: "Failed to fetch hiring forms" },
       { status: 500 }
     );
   }
 }
+
+const serialize = (docs: any[]) =>
+  docs.map((d: any) => ({
+    _id: d._id.toString(),
+    name: d.name,
+    rollNumber: d.rollNumber,
+    gender: d.gender,
+    chitkaraEmail: d.chitkaraEmail,
+    department: d.department,
+    group: d.group,
+    specialization: d.specialization,
+    hosteller: d.hosteller,
+    position: d.position,
+    role: d.role,
+    resumeUrl: d.resumeUrl || "",
+    status: d.status || "pending",
+    createdAt: d.createdAt || new Date(),
+    updatedAt: d.updatedAt || new Date(),
+  }));
