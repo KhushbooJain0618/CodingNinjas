@@ -3,9 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-export async function GET(req: NextRequest, context: { params: { filename: string } }) {
+interface Params {
+  filename: string;
+}
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Params | Promise<Params> }
+) {
   try {
-    const { filename } = context.params;
+    // If params is a Promise, await it
+    const { filename } = context.params instanceof Promise ? await context.params : context.params;
+
     const filePath = path.join("/tmp", filename);
 
     if (!fs.existsSync(filePath)) {
