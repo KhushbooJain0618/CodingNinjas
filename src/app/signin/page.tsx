@@ -157,7 +157,7 @@ export default function SigninPage() {
             {/* Footer Links */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-400">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <a href="/signup" className="font-semibold text-orange-500 hover:text-orange-400 transition-colors">
                   Sign Up
                 </a>
@@ -176,3 +176,4 @@ export default function SigninPage() {
     </div>
   );
 }
+

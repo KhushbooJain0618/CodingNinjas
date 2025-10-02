@@ -21,8 +21,15 @@ export async function PATCH(req: Request, { params }: Params) {
     await application.save();
 
     return NextResponse.json({ success: true, status: application.status });
-  } catch (err: any) {
-    console.error("❌ Error updating application status:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+  let message = "An unknown error occurred";
+
+  if (err instanceof Error) {
+    message = err.message;
   }
+
+  console.error("❌ Error updating application status:", message);
+  return NextResponse.json({ success: false, error: message }, { status: 500 });
+}
+
 }

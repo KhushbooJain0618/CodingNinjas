@@ -107,8 +107,15 @@ export async function POST(req: Request) {
     delete applicationData.__v;
 
     return NextResponse.json({ success: true, application: applicationData }, { status: 201 });
-  } catch (err: any) {
-    console.error("❌ Error saving application:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+  let message = "An unknown error occurred";
+
+  if (err instanceof Error) {
+    message = err.message;
   }
+
+  console.error("❌ Error saving application:", message);
+  return NextResponse.json({ success: false, error: message }, { status: 500 });
+}
+
 }

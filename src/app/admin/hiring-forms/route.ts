@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { HiringForm } from "@/models/HiringForm";
+import { HiringForm, IHiringForm } from "@/models/HiringForm";
+import { Types } from "mongoose";
 
 export async function GET() {
   try {
     await connectDB();
 
-    // Fetch all forms sorted by newest
-    const allForms = await HiringForm.find().sort({ createdAt: -1 }).lean();
+    const allForms: (IHiringForm & { _id: Types.ObjectId })[] = await HiringForm.find()
+  .sort({ createdAt: -1, _id: -1 });
 
-    // Serialize _id to string
-    const serialize = (docs: any[]) => docs.map((d) => ({ ...d, _id: d._id.toString() }));
+  
+    // Type-safe serializer
+    const serialize = (docs: IHiringForm[]) =>
+      docs.map(d => ({
+        ...d,
+        _id: (d._id as Types.ObjectId).toString(),
+      }));
+
 
     const pendingForms = serialize(allForms.filter((f) => f.status === "pending"));
     const completedForms = serialize(allForms.filter((f) => f.status === "approved"));

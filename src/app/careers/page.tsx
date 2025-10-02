@@ -90,9 +90,10 @@ export default function CareersPage() {
           </div>
           
           {/* Description */}
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-400 max-w-5xl mx-auto leading-relaxed mb-12 font-light">
-            At <span className="text-white font-semibold">Coding Ninjas CUIET</span>, we're committed to helping you learn, grow, and succeed in the tech world. Explore a world of opportunities, gain hands-on experience, and learn from industry experts as you set out on a path to success. Don't miss out on this chance to bag an apprenticeship and accelerate your career. Apply today and unlock the door to a bright and promising future!
-          </p>
+         <p className="text-lg md:text-xl lg:text-2xl text-gray-400 max-w-5xl mx-auto leading-relaxed mb-12 font-light">
+  At <span className="text-white font-semibold">Coding Ninjas CUIET</span>, we&apos;re committed to helping you learn, grow, and succeed in the tech world. Explore a world of opportunities, gain hands-on experience, and learn from industry experts as you set out on a path to success. Don&apos;t miss out on this chance to bag an apprenticeship and accelerate your career. Apply today and unlock the door to a bright and promising future!
+</p>
+
           
           {/* Scroll Indicator Line */}
           <div className="w-px h-20 bg-gradient-to-b from-orange-500 to-transparent mx-auto"></div>
