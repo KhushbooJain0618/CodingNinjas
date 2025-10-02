@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const resumeFileEntry = formData.get("resume");
     const resumeFile = resumeFileEntry instanceof File ? resumeFileEntry : null;
 
-    // ✅ Validate required fields
+    // Validate required fields
     if (
       !name ||
       !rollNumber ||
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Validate enum values
+    // Validate enum values
     if (!GENDERS.includes(gender as typeof GENDERS[number])) {
       return NextResponse.json(
         { success: false, error: "Invalid gender selected" },
@@ -64,43 +64,40 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Handle resume file upload
+    // Handle resume file upload to /tmp
     let resumeUrl = "";
     if (resumeFile) {
-      const uploadsDir = path.join(process.cwd(), "public", "resumes");
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      const tmpDir = path.join("/tmp");
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 
       const arrayBuffer = await resumeFile.arrayBuffer();
-
-      // ✅ Create unique filename to prevent overwriting
       const timestamp = Date.now();
       const safeFileName = `${timestamp}-${resumeFile.name}`;
-      const filePath = path.join(uploadsDir, safeFileName);
+      const tmpPath = path.join(tmpDir, safeFileName);
 
-      // Save the file
-      fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+      fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
 
-      // ✅ Save the unique filename in resumeUrl
-      resumeUrl = `/resumes/${safeFileName}`; // <--- THIS is crucial
-
+      // Use the tmpPath for further processing (e.g., upload to cloud)
+      // For now, we save the filename in DB
+      resumeUrl = `/tmp/${safeFileName}`;
+      console.log("Resume saved temporarily at:", tmpPath);
     }
 
     // Create hiring form document with status "pending"
     const application = await HiringForm.create({
-  name,
-  rollNumber,
-  gender,
-  chitkaraEmail,
-  department,
-  group,
-  specialization,
-  hosteller,
-  position,
-  role,
-  resumeUrl,
-  status: "pending", // crucial
-});
-
+      name,
+      rollNumber,
+      gender,
+      chitkaraEmail,
+      department,
+      group,
+      specialization,
+      hosteller,
+      position,
+      role,
+      resumeUrl,
+      status: "pending",
+    });
 
     // Return response without internal fields
     const applicationData = application.toObject();
@@ -108,14 +105,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, application: applicationData }, { status: 201 });
   } catch (err: unknown) {
-  let message = "An unknown error occurred";
+    let message = "An unknown error occurred";
+    if (err instanceof Error) message = err.message;
 
-  if (err instanceof Error) {
-    message = err.message;
+    console.error("❌ Error saving application:", message);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
-
-  console.error("❌ Error saving application:", message);
-  return NextResponse.json({ success: false, error: message }, { status: 500 });
-}
-
 }
