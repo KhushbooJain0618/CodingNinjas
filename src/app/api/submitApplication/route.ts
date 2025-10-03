@@ -76,22 +76,41 @@ export async function POST(req: Request) {
       const arrayBuffer = await resumeFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const uploaded = await new Promise<any>((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            {
-              folder: "resumes", // Cloudinary folder name
-              resource_type: "raw", // "raw" allows non-images (PDF/DOCX)
-              public_id: `${Date.now()}-${resumeFile.name}`,
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          )
-          .end(buffer);
-      });
+
+      interface CloudinaryUploadResult {
+  public_id: string;
+  version: number;
+  signature: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  resource_type: string;
+  created_at: string;
+  tags: string[];
+  bytes: number;
+  type: string;
+  etag: string;
+  placeholder: boolean;
+  url: string;
+  secure_url: string;
+  original_filename: string;
+}
+      const uploaded = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
+  cloudinary.uploader
+    .upload_stream(
+      {
+        folder: "resumes",
+        resource_type: "raw",
+        public_id: `${Date.now()}-${resumeFile.name}`,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result as CloudinaryUploadResult);
+      }
+    )
+    .end(buffer);
+});
+
 
       resumeUrl = uploaded.secure_url; // Save permanent Cloudinary URL
     }
