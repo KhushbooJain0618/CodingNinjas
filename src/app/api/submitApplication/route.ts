@@ -76,6 +76,7 @@ export async function POST(req: Request) {
       const arrayBuffer = await resumeFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const uploaded = await new Promise<any>((resolve, reject) => {
         cloudinary.uploader
           .upload_stream(
