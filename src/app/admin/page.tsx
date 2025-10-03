@@ -52,7 +52,7 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/admin/toggleStatus/${id}`, { method: "PATCH" });
       const data = await res.json();
       if (data.success) {
-        fetchApplications(); // refresh lists after status change
+        fetchApplications();
       } else {
         console.error("Failed to update status:", data.error);
       }
@@ -61,106 +61,80 @@ export default function AdminDashboard() {
     }
   };
 
-  const renderApplication = (app: Application, isPending: boolean) => (
-    <div key={app._id} className="relative bg-zinc-950 border border-zinc-800 rounded-2xl p-6 mb-4 hover:border-orange-500/50 transition-all duration-300">
-      {/* Subtle glow on hover */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/0 to-orange-500/0 hover:from-orange-500/5 hover:to-orange-500/5 transition-all duration-300"></div>
-      
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Name</span>
-          <span className="text-white font-semibold">{app.name}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Email</span>
-          <span className="text-white">{app.chitkaraEmail}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Roll No</span>
-          <span className="text-white">{app.rollNumber}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Gender</span>
-          <span className="text-white">{app.gender}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Department</span>
-          <span className="text-white">{app.department}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Group</span>
-          <span className="text-white">{app.group}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Specialization</span>
-          <span className="text-white">{app.specialization}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Hosteller</span>
-          <span className="text-white">{app.hosteller}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Position</span>
-          <span className="text-white">{app.position}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Role</span>
-          <span className="text-white">{app.role}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Resume</span>
-          {app.resumeUrl ? (
-            <a
-              href={`/api/resume/${app.resumeUrl.split("/tmp/")[1]}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-orange-500 hover:text-orange-400 font-semibold underline"
-            >
-              View Resume
-            </a>
-          ) : (
-            <span className="text-gray-500">No resume uploaded</span>
-          )}
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Status</span>
-          <span className={`font-semibold ${app.status === 'approved' ? 'text-green-500' : 'text-yellow-500'}`}>
-            {app.status}
-          </span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Submitted At</span>
-          <span className="text-white text-sm">{new Date(app.createdAt).toLocaleString()}</span>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500">Last Updated</span>
-          <span className="text-white text-sm">{new Date(app.updatedAt).toLocaleString()}</span>
-        </div>
-      </div>
-      
-      <button
-        onClick={() => toggleStatus(app._id)}
-        className={`relative mt-6 w-full md:w-auto py-3 px-6 rounded-xl font-semibold text-black transition-all duration-300 hover:scale-[1.02] shadow-lg ${
-          isPending 
-            ? "bg-green-500 hover:bg-green-600 hover:shadow-green-500/50" 
-            : "bg-yellow-500 hover:bg-yellow-600 hover:shadow-yellow-500/50"
-        }`}
-      >
-        {isPending ? "Approve" : "Move to Pending"}
-      </button>
+  const renderTable = (applications: Application[], isPending: boolean, startIndex: number) => (
+    <div className="overflow-x-auto bg-zinc-950 border border-zinc-800 rounded-2xl">
+      <table className="w-full text-left">
+        <thead className="bg-zinc-900 border-b border-zinc-800">
+          <tr>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">S.No</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Roll No</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Gender</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Department</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Group</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Specialization</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Hosteller</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Position</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Resume</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Submitted At</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Updated</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-800">
+          {applications.map((app, index) => (
+            <tr key={app._id} className="hover:bg-zinc-900/50 transition-colors duration-200">
+              <td className="px-4 py-4 text-sm text-white font-medium">{startIndex + index + 1}</td>
+              <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
+              <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.gender}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.department}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.group}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.specialization}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.hosteller}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.position}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.role}</td>
+              <td className="px-4 py-4 text-sm">
+              {app.resumeUrl ? (
+                <a
+                  href={app.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-500 hover:text-orange-400 font-semibold underline"
+                >
+                  View
+                </a>
+              ) : (
+                <span className="text-gray-500">N/A</span>
+              )}
+            </td>
+              <td className="px-4 py-4 text-sm">
+                <span className={`font-semibold ${app.status === 'approved' ? 'text-green-500' : 'text-yellow-500'}`}>
+                  {app.status}
+                </span>
+              </td>
+              <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{new Date(app.createdAt).toLocaleString()}</td>
+              <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{new Date(app.updatedAt).toLocaleString()}</td>
+              <td className="px-4 py-4 text-sm">
+                <button
+                  onClick={() => toggleStatus(app._id)}
+                  className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${
+                    isPending 
+                      ? "bg-green-500 hover:bg-green-600" 
+                      : "bg-yellow-500 hover:bg-yellow-600"
+                  }`}
+                >
+                  {isPending ? "Approve" : "Pending"}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 
@@ -203,7 +177,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Pending Applications Section */}
-        <section className="mb-12 max-w-6xl mx-auto">
+        <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-white">Pending Applications</h2>
             <span className="px-3 py-1 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-500 text-sm font-semibold">
@@ -216,14 +190,12 @@ export default function AdminDashboard() {
               <p className="text-gray-400">No pending applications.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {pendingApplications.map((app) => renderApplication(app, true))}
-            </div>
+            renderTable(pendingApplications, true, 0)
           )}
         </section>
 
         {/* Completed Applications Section */}
-        <section className="max-w-6xl mx-auto">
+        <section>
           <div className="flex items-center gap-3 mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-white">Completed Applications</h2>
             <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full text-green-500 text-sm font-semibold">
@@ -236,9 +208,7 @@ export default function AdminDashboard() {
               <p className="text-gray-400">No completed applications.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {completedApplications.map((app) => renderApplication(app, false))}
-            </div>
+            renderTable(completedApplications, false, 0)
           )}
         </section>
 
