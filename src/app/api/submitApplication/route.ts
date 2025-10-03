@@ -102,6 +102,10 @@ export async function POST(req: Request) {
         folder: "resumes",
         resource_type: "raw",
         public_id: `${Date.now()}-${resumeFile.name}`,
+        overwrite: false,      // optional but safer
+        use_filename: true,
+        unique_filename: true, // ensures no conflicts
+        type: "upload",        // make it publicly accessible
       },
       (error, result) => {
         if (error) reject(error);
@@ -110,6 +114,7 @@ export async function POST(req: Request) {
     )
     .end(buffer);
 });
+
 
 
       resumeUrl = uploaded.secure_url; // Save permanent Cloudinary URL
