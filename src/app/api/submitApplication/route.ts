@@ -118,14 +118,17 @@ export async function POST(req: Request) {
       { success: true, application: applicationData },
       { status: 201 }
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: unknown) {
-    let message = "An unknown error occurred";
-    if (err instanceof Error) message = err.message;
-
-    console.error("❌ Error saving application:", message);
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+  let message = "An unknown error occurred";
+  if (err instanceof Error) {
+    message = err.message;
   }
+
+  console.error("❌ Error saving application:", message);
+  return NextResponse.json(
+    { success: false, error: message },
+    { status: 500 }
+  );
+};
 }
