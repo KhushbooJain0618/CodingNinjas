@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 interface FormState {
   name: string;
   rollNumber: string;
+  contactNumber: string;
   gender: "Male" | "Female" | "Other" | "";
   chitkaraEmail: string;
   department: string;
@@ -20,6 +21,7 @@ export default function HiringFormPage() {
   const [form, setForm] = useState<FormState>({
     name: "",
     rollNumber: "",
+    contactNumber: "",
     gender: "",
     chitkaraEmail: "",
     department: "",
@@ -208,6 +210,21 @@ export default function HiringFormPage() {
                   onChange={handleChange}
                   className="w-full p-4 rounded-xl bg-black border border-zinc-700 focus:border-orange-500 focus:outline-none text-white placeholder-gray-600 transition-all duration-300"
                   required
+                />
+              </div>
+
+              {/* Contact Number */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-400">Contact Number</label>
+                <input
+                  name="contactNumber"
+                  type="tel"
+                  placeholder="Enter your contact number"
+                  value={form.contactNumber}
+                  onChange={handleChange}
+                  className="w-full p-4 rounded-xl bg-black border border-zinc-700 focus:border-orange-500 focus:outline-none text-white placeholder-gray-600 transition-all duration-300"
+                  required
+                  pattern="[0-9]{10}"   // ✅ Optional validation for 10 digits
                 />
               </div>
 

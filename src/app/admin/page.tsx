@@ -7,6 +7,7 @@ interface Application {
   name: string;
   chitkaraEmail: string;
   rollNumber: string;
+  contactNumber: string;
   gender: string;
   department: string;
   group: string;
@@ -70,6 +71,7 @@ export default function AdminDashboard() {
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Roll No</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contact No</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Gender</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Department</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Group</th>
@@ -91,6 +93,7 @@ export default function AdminDashboard() {
               <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
               <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
               <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
+              <td className="px-4 py-4 text-sm text-white">{app.contactNumber}</td>
               <td className="px-4 py-4 text-sm text-white">{app.gender}</td>
               <td className="px-4 py-4 text-sm text-white">{app.department}</td>
               <td className="px-4 py-4 text-sm text-white">{app.group}</td>

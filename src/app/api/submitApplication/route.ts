@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     // Extract and trim fields
     const name = (formData.get("name") as string)?.trim();
     const rollNumber = (formData.get("rollNumber") as string)?.trim();
+    const contactNumber = (formData.get("contactNumber") as string)?.trim();
     const gender = (formData.get("gender") as string)?.trim();
     const chitkaraEmail = (formData.get("chitkaraEmail") as string)?.trim();
     const department = (formData.get("department") as string)?.trim();
@@ -32,7 +33,6 @@ export async function POST(req: Request) {
     const hosteller = (formData.get("hosteller") as string)?.trim();
     const position = (formData.get("position") as string)?.trim();
     const role = (formData.get("role") as string)?.trim();
-
     const resumeFileEntry = formData.get("resume");
     const resumeFile = resumeFileEntry instanceof File ? resumeFileEntry : null;
 
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     if (
       !name ||
       !rollNumber ||
+      !contactNumber ||
       !gender ||
       !chitkaraEmail ||
       !department ||
@@ -63,7 +64,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!HOSTELLER_TYPES.includes(hosteller as (typeof HOSTELLER_TYPES)[number])) {
+    if (
+      !HOSTELLER_TYPES.includes(hosteller as (typeof HOSTELLER_TYPES)[number])
+    ) {
       return NextResponse.json(
         { success: false, error: "Invalid hosteller type selected" },
         { status: 400 }
@@ -76,46 +79,45 @@ export async function POST(req: Request) {
       const arrayBuffer = await resumeFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-
       interface CloudinaryUploadResult {
-  public_id: string;
-  version: number;
-  signature: string;
-  width?: number;
-  height?: number;
-  format?: string;
-  resource_type: string;
-  created_at: string;
-  tags: string[];
-  bytes: number;
-  type: string;
-  etag: string;
-  placeholder: boolean;
-  url: string;
-  secure_url: string;
-  original_filename: string;
-}
-      const uploaded = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
-  cloudinary.uploader
-    .upload_stream(
-      {
-        folder: "resumes",
-        resource_type: "raw",
-        public_id: `${Date.now()}-${resumeFile.name}`,
-        overwrite: false,      // optional but safer
-        use_filename: true,
-        unique_filename: true, // ensures no conflicts
-        type: "upload",        // make it publicly accessible
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result as CloudinaryUploadResult);
+        public_id: string;
+        version: number;
+        signature: string;
+        width?: number;
+        height?: number;
+        format?: string;
+        resource_type: string;
+        created_at: string;
+        tags: string[];
+        bytes: number;
+        type: string;
+        etag: string;
+        placeholder: boolean;
+        url: string;
+        secure_url: string;
+        original_filename: string;
       }
-    )
-    .end(buffer);
-});
-
-
+      const uploaded = await new Promise<CloudinaryUploadResult>(
+        (resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              {
+                folder: "resumes",
+                resource_type: "raw",
+                public_id: `${Date.now()}-${resumeFile.name}`,
+                overwrite: false, // optional but safer
+                use_filename: true,
+                unique_filename: true, // ensures no conflicts
+                type: "upload", // make it publicly accessible
+              },
+              (error, result) => {
+                if (error) reject(error);
+                else resolve(result as CloudinaryUploadResult);
+              }
+            )
+            .end(buffer);
+        }
+      );
 
       resumeUrl = uploaded.secure_url; // Save permanent Cloudinary URL
     }
@@ -124,6 +126,7 @@ export async function POST(req: Request) {
     const application = await HiringForm.create({
       name,
       rollNumber,
+      contactNumber,
       gender,
       chitkaraEmail,
       department,
@@ -144,19 +147,18 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (err: unknown) {
-  let message = "An unknown error occurred";
-  
-  if (err instanceof Error) {
-    message = err.message;
-  } else if (typeof err === "string") {
-    message = err;
+    let message = "An unknown error occurred";
+
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (typeof err === "string") {
+      message = err;
+    }
+
+    console.error("❌ Error saving application:", message);
+    return NextResponse.json(
+      { success: false, error: message },
+      { status: 500 }
+    );
   }
-
-  console.error("❌ Error saving application:", message);
-  return NextResponse.json(
-    { success: false, error: message },
-    { status: 500 }
-  );
-}
-
 }

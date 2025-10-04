@@ -4,6 +4,7 @@ import { Schema, model, models, Document } from "mongoose";
 export interface IHiringForm extends Document {
   name: string;
   rollNumber: string;
+  contactNumber: string;
   gender: "Male" | "Female" | "Other";
   chitkaraEmail: string;
   department: string;
@@ -23,6 +24,7 @@ const HiringFormSchema = new Schema<IHiringForm>(
   {
     name: { type: String, required: true, trim: true },
     rollNumber: { type: String, required: true, trim: true },
+    contactNumber: { type: String, required: true, trim: true },
     gender: { type: String, required: true, trim: true },
     chitkaraEmail: {
       type: String,
