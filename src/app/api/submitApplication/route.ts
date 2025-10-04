@@ -56,16 +56,16 @@ export async function POST(req: Request) {
       );
     }
     if (!GENDERS.includes(gender as (typeof GENDERS)[number])) {
-        return NextResponse.json(
-            { success: false, error: "Invalid gender selected" },
-            { status: 400 }
-        );
+      return NextResponse.json(
+        { success: false, error: "Invalid gender selected" },
+        { status: 400 }
+      );
     }
     if (!HOSTELLER_TYPES.includes(hosteller as (typeof HOSTELLER_TYPES)[number])) {
-        return NextResponse.json(
-            { success: false, error: "Invalid hosteller type selected" },
-            { status: 400 }
-        );
+      return NextResponse.json(
+        { success: false, error: "Invalid hosteller type selected" },
+        { status: 400 }
+      );
     }
 
     // Handle resume file upload → Cloudinary
@@ -74,9 +74,18 @@ export async function POST(req: Request) {
       const arrayBuffer = await resumeFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
+      // Define a more specific type for the Cloudinary response
       interface CloudinaryUploadResult {
         secure_url: string;
-        [key: string]: any;
+        // Use 'unknown' instead of 'any' for better type safety
+        [key: string]: unknown;
+      }
+
+      // Define a minimal type for the Cloudinary error object
+      interface CloudinaryError {
+        message: string;
+        name: string;
+        http_code: number;
       }
 
       const uploaded = await new Promise<CloudinaryUploadResult>(
@@ -85,17 +94,20 @@ export async function POST(req: Request) {
             {
               folder: "resumes",
               // Use 'image' resource_type for direct viewability.
-              resource_type: "image", 
+              resource_type: "image",
               unique_filename: true,
             },
-            (error, result) => {
+            // Explicitly type the callback parameters to avoid implicit 'any'
+            (error?: CloudinaryError, result?: CloudinaryUploadResult) => {
               if (error) {
                 console.error("Cloudinary Upload Error:", error);
-                return reject(error);
+                return reject(new Error(error.message || "Cloudinary upload failed"));
               }
               if (result) {
-                return resolve(result as CloudinaryUploadResult);
+                return resolve(result);
               }
+              // Handle the case where there's no error but also no result
+              return reject(new Error("Cloudinary upload returned no result."));
             }
           );
           stream.end(buffer);
@@ -145,4 +157,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
