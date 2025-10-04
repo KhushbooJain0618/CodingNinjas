@@ -20,10 +20,6 @@ export async function GET() {
 
     // This log is for definitive verification in your terminal.
     if (pendingForms.length > 0) {
-      console.log(
-        "✅ Final Check: Data fetched from MongoDB:",
-        JSON.stringify(pendingForms[0], null, 2)
-      );
     }
 
     // Return the complete data.
@@ -35,7 +31,6 @@ export async function GET() {
     if (error instanceof Error) {
       message = error.message;
     }
-    console.error("❌ Error fetching applications from API:", message);
 
     return NextResponse.json(
       { success: false, error: "Server error while fetching applications." },

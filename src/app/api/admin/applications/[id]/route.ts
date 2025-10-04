@@ -42,7 +42,6 @@ export async function DELETE(
     if (error instanceof Error) {
       message = error.message;
     }
-    console.error("❌ Error deleting application:", message);
 
     return NextResponse.json(
       { success: false, error: message },
