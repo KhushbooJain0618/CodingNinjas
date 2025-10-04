@@ -17,7 +17,7 @@ interface Application {
   position: string;
   role: string;
   resumeUrl?: string;
-  status: "pending" | "approved";
+  status: "pending" | "done";
   createdAt: string;
   updatedAt: string;
 }
@@ -25,7 +25,7 @@ interface Application {
 interface Career {
   _id: string;
   title: string;
-  role: string;
+  role:string;
 }
 
 // --- Helper Components ---
@@ -46,41 +46,29 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, loading, itemType
     </div>
   );
 };
+const PlusIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
+const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>);
 
-const PlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-);
-
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-);
 
 // --- Main Dashboard Component ---
 export default function AdminDashboard() {
-  // State declarations
   const [pendingApplications, setPendingApplications] = useState<Application[]>([]);
   const [completedApplications, setCompletedApplications] = useState<Application[]>([]);
   const [careers, setCareers] = useState<Career[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  
-  // Modal and deletion state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'application' | 'career' } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Form state for new career
   const [newCareerTitle, setNewCareerTitle] = useState("");
   const [newCareerRole, setNewCareerRole] = useState("");
   const [isAddingCareer, setIsAddingCareer] = useState(false);
 
-  // --- Effects ---
   useEffect(() => {
     setMounted(true);
     Promise.all([fetchApplications(), fetchCareers()]).finally(() => setLoading(false));
   }, []);
 
-  // --- Data Fetching ---
   const fetchApplications = async () => {
     try {
       const res = await fetch("/api/admin/applications", { cache: "no-store" });
@@ -102,7 +90,6 @@ export default function AdminDashboard() {
     } catch (err) { console.error(err); }
   };
 
-  // --- Handlers ---
   const handleAddCareer = async (e: FormEvent) => {
       e.preventDefault();
       if (!newCareerTitle || !newCareerRole) return;
@@ -170,39 +157,51 @@ export default function AdminDashboard() {
   };
 
   // --- Render Functions ---
-  const renderTable = (applications: Application[], isPending: boolean) => (
-    <div className="overflow-x-auto bg-zinc-950 border border-zinc-800 rounded-2xl">
-      <table className="w-full text-left">
-        <thead className="bg-zinc-900 border-b border-zinc-800">
-          <tr>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">S.No</th>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Roll No</th>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contact No</th>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-800">
-          {applications.map((app, index) => (
-            <tr key={app._id} className="hover:bg-zinc-900/50 transition-colors duration-200">
-              <td className="px-4 py-4 text-sm text-white font-medium">{index + 1}</td>
-              <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
-              <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
-              <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
-              <td className="px-4 py-4 text-sm text-white">{app.contactNumber}</td>
-              <td className="px-4 py-4 text-sm text-center">
-                 <div className="flex items-center justify-center gap-2">
-                    <button onClick={() => toggleStatus(app._id)} className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${isPending ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"}`}>{isPending ? "Approve" : "Pend"}</button>
-                    <button onClick={() => openDeleteModal(app._id, 'application')} className="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600/30 hover:text-red-400 transition-all duration-200" aria-label="Delete application"><TrashIcon /></button>
-                 </div>
-              </td>
+  const renderTable = (applications: Application[], isPending: boolean) => {
+    return (
+        <div className="overflow-x-auto bg-zinc-950 border border-zinc-800 rounded-2xl">
+        <table className="w-full text-left">
+            <thead className="bg-zinc-900 border-b border-zinc-800">
+            <tr>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">S.No</th>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Roll No</th>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Position</th>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Resume</th>
+                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+            {applications.map((app, index) => (
+                <tr key={app._id} className="hover:bg-zinc-900/50 transition-colors duration-200">
+                    <td className="px-4 py-4 text-sm text-white font-medium">{index + 1}</td>
+                    <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
+                    <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
+                    <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
+                    <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.position}</td>
+                    <td className="px-4 py-4 text-sm text-white">
+                    {app.resumeUrl ? (
+                        <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
+                        View
+                        </a>
+                    ) : (
+                        <span className="text-gray-500">N/A</span>
+                    )}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-center">
+                        <div className="flex items-center justify-center gap-2">
+                            <button onClick={() => toggleStatus(app._id)} className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${isPending ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"}`}>{isPending ? "Done" : "Pending"}</button>
+                            <button onClick={() => openDeleteModal(app._id, 'application')} className="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600/30 hover:text-red-400 transition-all duration-200" aria-label="Delete application"><TrashIcon /></button>
+                        </div>
+                    </td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+        </div>
+    );
+  }
 
   if (loading) {
       return (
@@ -229,11 +228,7 @@ export default function AdminDashboard() {
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">Admin Dashboard</h1>
                 <div className="w-24 h-1 bg-gradient-to-r from-orange-500 to-orange-600 mx-auto mt-4"></div>
             </div>
-          
-            {/* --- Main Content Layout: Two Columns --- */}
             <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
-
-                {/* --- Left Column: Applications --- */}
                 <div className="lg:col-span-2 space-y-12">
                     <section>
                         <div className="flex items-center gap-3 mb-6">
@@ -250,8 +245,6 @@ export default function AdminDashboard() {
                         {completedApplications.length === 0 ? <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 text-center"><p className="text-gray-400">No completed applications.</p></div> : renderTable(completedApplications, false)}
                     </section>
                 </div>
-
-                {/* --- Right Column: Career Management --- */}
                 <div className="lg:col-span-1 mt-12 lg:mt-0">
                     <section>
                         <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Manage Career Openings</h2>
@@ -276,7 +269,6 @@ export default function AdminDashboard() {
                     </section>
                 </div>
             </div>
-
             <div className="mt-16 text-center">
                 <p className="text-xs text-gray-600">Powered by <span className="font-bold text-orange-500">CN_CUIET</span></p>
             </div>

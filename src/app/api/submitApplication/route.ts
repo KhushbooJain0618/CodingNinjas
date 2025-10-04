@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const resumeFileEntry = formData.get("resume");
     const resumeFile = resumeFileEntry instanceof File ? resumeFileEntry : null;
 
-    // Validate required fields
+    // --- Validation logic ---
     if (
       !name ||
       !rollNumber ||
@@ -55,22 +55,17 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    // Validate enum values
     if (!GENDERS.includes(gender as (typeof GENDERS)[number])) {
-      return NextResponse.json(
-        { success: false, error: "Invalid gender selected" },
-        { status: 400 }
-      );
+        return NextResponse.json(
+            { success: false, error: "Invalid gender selected" },
+            { status: 400 }
+        );
     }
-
-    if (
-      !HOSTELLER_TYPES.includes(hosteller as (typeof HOSTELLER_TYPES)[number])
-    ) {
-      return NextResponse.json(
-        { success: false, error: "Invalid hosteller type selected" },
-        { status: 400 }
-      );
+    if (!HOSTELLER_TYPES.includes(hosteller as (typeof HOSTELLER_TYPES)[number])) {
+        return NextResponse.json(
+            { success: false, error: "Invalid hosteller type selected" },
+            { status: 400 }
+        );
     }
 
     // Handle resume file upload → Cloudinary
@@ -80,46 +75,34 @@ export async function POST(req: Request) {
       const buffer = Buffer.from(arrayBuffer);
 
       interface CloudinaryUploadResult {
-        public_id: string;
-        version: number;
-        signature: string;
-        width?: number;
-        height?: number;
-        format?: string;
-        resource_type: string;
-        created_at: string;
-        tags: string[];
-        bytes: number;
-        type: string;
-        etag: string;
-        placeholder: boolean;
-        url: string;
         secure_url: string;
-        original_filename: string;
+        [key: string]: any;
       }
+
       const uploaded = await new Promise<CloudinaryUploadResult>(
         (resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream(
-              {
-                folder: "resumes",
-                resource_type: "raw",
-                public_id: `${Date.now()}-${resumeFile.name}`,
-                overwrite: false, // optional but safer
-                use_filename: true,
-                unique_filename: true, // ensures no conflicts
-                type: "upload", // make it publicly accessible
-              },
-              (error, result) => {
-                if (error) reject(error);
-                else resolve(result as CloudinaryUploadResult);
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "resumes",
+              // Use 'image' resource_type for direct viewability.
+              resource_type: "image", 
+              unique_filename: true,
+            },
+            (error, result) => {
+              if (error) {
+                console.error("Cloudinary Upload Error:", error);
+                return reject(error);
               }
-            )
-            .end(buffer);
+              if (result) {
+                return resolve(result as CloudinaryUploadResult);
+              }
+            }
+          );
+          stream.end(buffer);
         }
       );
 
-      resumeUrl = uploaded.secure_url; // Save permanent Cloudinary URL
+      resumeUrl = uploaded.secure_url;
     }
 
     // Create hiring form document with status "pending"
@@ -147,18 +130,19 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (err: unknown) {
-    let message = "An unknown error occurred";
+    let message = "An unknown error occurred during the process.";
 
     if (err instanceof Error) {
       message = err.message;
-    } else if (typeof err === "string") {
-      message = err;
+    } else if (typeof err === "object" && err !== null) {
+      message = JSON.stringify(err);
     }
 
-    console.error("❌ Error saving application:", message);
+    console.error("❌ Top-level catch block error:", err);
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }
     );
   }
 }
+
