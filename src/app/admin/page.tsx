@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+// The import for lucide-react has been removed as we are now using an inline SVG.
+
 interface Application {
   _id: string;
   name: string;
@@ -21,11 +23,64 @@ interface Application {
   updatedAt: string;
 }
 
+// A simple confirmation modal component
+const DeleteConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-xl w-full max-w-md p-6 text-center">
+        <h3 className="text-xl font-bold text-white mb-4">Confirm Deletion</h3>
+        <p className="text-gray-400 mb-8">
+          Are you unequivocally certain you wish to permanently erase this application? This action cannot be undone.
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-6 py-2 rounded-lg bg-zinc-700 text-white font-semibold hover:bg-zinc-600 transition-colors duration-200 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="px-6 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "Delete"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 export default function AdminDashboard() {
   const [pendingApplications, setPendingApplications] = useState<Application[]>([]);
   const [completedApplications, setCompletedApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+
+  // State for delete confirmation
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
 
   useEffect(() => {
     setMounted(true);
@@ -62,7 +117,40 @@ export default function AdminDashboard() {
     }
   };
 
-  const renderTable = (applications: Application[], isPending: boolean, startIndex: number) => (
+  // --- Functions to handle delete actions ---
+  const openDeleteModal = (id: string) => {
+    setApplicationToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setApplicationToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const confirmDelete = async () => {
+    if (!applicationToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/applications/${applicationToDelete}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchApplications(); // Re-fetch data to update the UI
+      } else {
+        console.error("Failed to delete application:", data.error);
+      }
+    } catch (err) {
+      console.error("Error deleting application:", err);
+    } finally {
+      setIsDeleting(false);
+      closeDeleteModal();
+    }
+  };
+
+
+  const renderTable = (applications: Application[], isPending: boolean) => (
     <div className="overflow-x-auto bg-zinc-950 border border-zinc-800 rounded-2xl">
       <table className="w-full text-left">
         <thead className="bg-zinc-900 border-b border-zinc-800">
@@ -83,13 +171,13 @@ export default function AdminDashboard() {
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Submitted At</th>
             <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Updated</th>
-            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
+            <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-800">
           {applications.map((app, index) => (
             <tr key={app._id} className="hover:bg-zinc-900/50 transition-colors duration-200">
-              <td className="px-4 py-4 text-sm text-white font-medium">{startIndex + index + 1}</td>
+              <td className="px-4 py-4 text-sm text-white font-medium">{index + 1}</td>
               <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
               <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
               <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
@@ -102,19 +190,19 @@ export default function AdminDashboard() {
               <td className="px-4 py-4 text-sm text-white">{app.position}</td>
               <td className="px-4 py-4 text-sm text-white">{app.role}</td>
               <td className="px-4 py-4 text-sm">
-              {app.resumeUrl ? (
-                <a
-                  href={app.resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-orange-500 hover:text-orange-400 font-semibold underline"
-                >
-                  View
-                </a>
-              ) : (
-                <span className="text-gray-500">N/A</span>
-              )}
-            </td>
+                {app.resumeUrl ? (
+                  <a
+                    href={app.resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-500 hover:text-orange-400 font-semibold underline"
+                  >
+                    View
+                  </a>
+                ) : (
+                  <span className="text-gray-500">N/A</span>
+                )}
+              </td>
               <td className="px-4 py-4 text-sm">
                 <span className={`font-semibold ${app.status === 'approved' ? 'text-green-500' : 'text-yellow-500'}`}>
                   {app.status}
@@ -122,17 +210,41 @@ export default function AdminDashboard() {
               </td>
               <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{new Date(app.createdAt).toLocaleString()}</td>
               <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{new Date(app.updatedAt).toLocaleString()}</td>
-              <td className="px-4 py-4 text-sm">
-                <button
-                  onClick={() => toggleStatus(app._id)}
-                  className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${
-                    isPending 
-                      ? "bg-green-500 hover:bg-green-600" 
-                      : "bg-yellow-500 hover:bg-yellow-600"
-                  }`}
-                >
-                  {isPending ? "Approve" : "Pending"}
-                </button>
+              <td className="px-4 py-4 text-sm text-center">
+                 <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => toggleStatus(app._id)}
+                      className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${
+                        isPending 
+                          ? "bg-green-500 hover:bg-green-600" 
+                          : "bg-yellow-500 hover:bg-yellow-600"
+                      }`}
+                    >
+                      {isPending ? "Approve" : "Pend"}
+                    </button>
+                    <button 
+                        onClick={() => openDeleteModal(app._id)}
+                        className="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600/30 hover:text-red-400 transition-all duration-200"
+                        aria-label="Delete application"
+                    >
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18"></path>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
+                 </div>
               </td>
             </tr>
           ))}
@@ -153,6 +265,13 @@ export default function AdminDashboard() {
   }
 
   return (
+    <>
+    <DeleteConfirmationModal 
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        loading={isDeleting}
+    />
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       
       {/* Animated Background */}
@@ -193,7 +312,7 @@ export default function AdminDashboard() {
               <p className="text-gray-400">No pending applications.</p>
             </div>
           ) : (
-            renderTable(pendingApplications, true, 0)
+            renderTable(pendingApplications, true)
           )}
         </section>
 
@@ -211,7 +330,7 @@ export default function AdminDashboard() {
               <p className="text-gray-400">No completed applications.</p>
             </div>
           ) : (
-            renderTable(completedApplications, false, 0)
+            renderTable(completedApplications, false)
           )}
         </section>
 
@@ -223,5 +342,7 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
+    </>
   );
 }
+
