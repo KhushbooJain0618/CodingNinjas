@@ -6,9 +6,9 @@ import mongoose from "mongoose";
 // DELETE /api/admin/applications/[id]
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
+  const { id } = await context.params; // ⬅️ note the "await"
 
   // Validate that the ID is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -21,7 +21,6 @@ export async function DELETE(
   try {
     await connectDB();
 
-    // Find the document by its ID and delete it
     const deletedApplication = await HiringForm.findByIdAndDelete(id);
 
     if (!deletedApplication) {
