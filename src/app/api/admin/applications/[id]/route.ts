@@ -6,9 +6,11 @@ import mongoose from "mongoose";
 // This function handles DELETE requests to /api/admin/applications/[id]
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  // Correctly type context to show that params is a Promise
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params; // Destructure 'id' from the context object
+  // Await the promise to resolve the params and then destructure the id
+  const { id } = await context.params;
 
   // Validate that the ID is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -49,3 +51,4 @@ export async function DELETE(
     );
   }
 }
+
