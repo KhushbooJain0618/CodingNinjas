@@ -159,45 +159,59 @@ export default function AdminDashboard() {
   // --- Render Functions ---
   const renderTable = (applications: Application[], isPending: boolean) => {
     return (
-        <div className="overflow-x-auto bg-zinc-950 border border-zinc-800 rounded-2xl">
+      <div className="overflow-x-auto bg-zinc-950 border border-zinc-800 rounded-2xl">
         <table className="w-full text-left">
-            <thead className="bg-zinc-900 border-b border-zinc-800">
+          <thead className="bg-zinc-900 border-b border-zinc-800">
             <tr>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">S.No</th>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Roll No</th>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Position</th>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Resume</th>
-                <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Actions</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">S.No</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contact</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Roll No</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Gender</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Dept</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Group</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Spec.</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Accom.</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Position</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Resume</th>
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Actions</th>
             </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
+          </thead>
+          <tbody className="divide-y divide-zinc-800">
             {applications.map((app, index) => (
-                <tr key={app._id} className="hover:bg-zinc-900/50 transition-colors duration-200">
-                    <td className="px-4 py-4 text-sm text-white font-medium">{index + 1}</td>
-                    <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
-                    <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
-                    <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
-                    <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.position}</td>
-                    <td className="px-4 py-4 text-sm text-white">
-                    {app.resumeUrl ? (
-                        <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
-                        View
-                        </a>
-                    ) : (
-                        <span className="text-gray-500">N/A</span>
-                    )}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-center">
-                        <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => toggleStatus(app._id)} className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${isPending ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"}`}>{isPending ? "Done" : "Pending"}</button>
-                            <button onClick={() => openDeleteModal(app._id, 'application')} className="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600/30 hover:text-red-400 transition-all duration-200" aria-label="Delete application"><TrashIcon /></button>
-                        </div>
-                    </td>
-                </tr>
+              <tr key={app._id} className="hover:bg-zinc-900/50 transition-colors duration-200">
+                <td className="px-4 py-4 text-sm text-white font-medium">{index + 1}</td>
+                <td className="px-4 py-4 text-sm text-white font-semibold whitespace-nowrap">{app.name}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.chitkaraEmail}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.contactNumber}</td>
+                <td className="px-4 py-4 text-sm text-white">{app.rollNumber}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.gender}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.department}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.group}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.specialization}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.hosteller}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.position}</td>
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">{app.role}</td>
+                <td className="px-4 py-4 text-sm text-white">
+                  {app.resumeUrl ? (
+                    <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
+                      View
+                    </a>
+                  ) : (
+                    <span className="text-gray-500">N/A</span>
+                  )}
+                </td>
+                <td className="px-4 py-4 text-sm text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <button onClick={() => toggleStatus(app._id)} className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${isPending ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"}`}>{isPending ? "Done" : "Pending"}</button>
+                    <button onClick={() => openDeleteModal(app._id, 'application')} className="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600/30 hover:text-red-400 transition-all duration-200" aria-label="Delete application"><TrashIcon /></button>
+                  </div>
+                </td>
+              </tr>
             ))}
-            </tbody>
+          </tbody>
         </table>
         </div>
     );
