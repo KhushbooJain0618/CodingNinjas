@@ -73,7 +73,7 @@ export default function CareersPage() {
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(rgba(255, 107, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 107, 0, 0.03) 1px, transparent 1px)`, backgroundSize: '80px 80px' }}></div>
-        <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-orange-500 rounded-full mix-blend-normal filter blur-[140px] opacity-20 animate-pulse"></div>
+        <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-orange-500 rounded-full mix-blend-normal filter blur-[140px] opacity-20 "></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-orange-600 rounded-full mix-blend-normal filter blur-[140px] opacity-15" style={{ animationDelay: '2s' }}></div>
       </div>
 
