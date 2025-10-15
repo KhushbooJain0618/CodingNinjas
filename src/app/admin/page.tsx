@@ -176,6 +176,8 @@ export default function AdminDashboard() {
               <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Position</th>
               <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
               <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Resume</th>
+              {/* ✨ NEW: Added header for submission date */}
+              <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Submitted On</th>
               <th className="px-4 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Actions</th>
             </tr>
           </thead>
@@ -203,6 +205,14 @@ export default function AdminDashboard() {
                     <span className="text-gray-500">N/A</span>
                   )}
                 </td>
+                {/* ✨ NEW: Added cell with formatted submission date */}
+                <td className="px-4 py-4 text-sm text-white whitespace-nowrap">
+                  {new Date(app.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </td>
                 <td className="px-4 py-4 text-sm text-center">
                   <div className="flex items-center justify-center gap-2">
                     <button onClick={() => toggleStatus(app._id)} className={`py-2 px-4 rounded-lg font-semibold text-black text-xs transition-all duration-300 hover:scale-[1.05] shadow-md ${isPending ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"}`}>{isPending ? "Done" : "Pending"}</button>
@@ -213,7 +223,7 @@ export default function AdminDashboard() {
             ))}
           </tbody>
         </table>
-        </div>
+      </div>
     );
   }
 
@@ -291,4 +301,3 @@ export default function AdminDashboard() {
     </>
   );
 }
-

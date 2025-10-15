@@ -41,7 +41,7 @@ export default function HiringFormPage() {
     setMounted(true);
   }, []);
 
-  // ✅ Fetch user info & prefill, also prefill position & role
+  // Fetch user info & prefill, also prefill position & role
   useEffect(() => {
     const selectedRole = localStorage.getItem("selectedRole");
     if (selectedRole) {
@@ -224,7 +224,7 @@ export default function HiringFormPage() {
                   onChange={handleChange}
                   className="w-full p-4 rounded-xl bg-black border border-zinc-700 focus:border-orange-500 focus:outline-none text-white placeholder-gray-600 transition-all duration-300"
                   required
-                  pattern="[0-9]{10}"   // ✅ Optional validation for 10 digits
+                  pattern="[0-9]{10}"  
                 />
               </div>
 
@@ -342,7 +342,7 @@ export default function HiringFormPage() {
 
               {/* Resume Upload */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-400">Resume</label>
+                <label className="text-sm font-medium text-gray-400">Resume (PDF, DOC, or DOCX)</label>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
