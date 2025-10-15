@@ -2,12 +2,12 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { HiringForm } from "@/models/HiringForm";
-import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary"; // Import UploadApiResponse
 import path from "path";
 
-// Allowed enum values
-const GENDERS = ["Male", "Female", "Other"] as const;
-const HOSTELLER_TYPES = ["Hosteller", "Day Scholar"] as const;
+// NOTE: These are currently unused and cause warnings. Consider removing them if not needed.
+// const GENDERS = ["Male", "Female", "Other"] as const;
+// const HOSTELLER_TYPES = ["Hosteller", "Day Scholar"] as const;
 
 // Configure Cloudinary
 cloudinary.config({
@@ -48,13 +48,12 @@ export async function POST(req: Request) {
       const originalFilename = path.parse(resumeFile.name).name;
       const sanitizedFilename = originalFilename.replace(/[^a-zA-Z0-9_.-]/g, "_");
 
-      const uploaded = await new Promise<any>((resolve, reject) => {
+      // ✅ FIX 1: Replaced <any> with the more specific <UploadApiResponse> type from Cloudinary.
+      const uploaded = await new Promise<UploadApiResponse>((resolve, reject) => {
         cloudinary.uploader.upload_stream(
           {
             folder: "resumes",
-            // ✅ FINAL FIX 1: Explicitly set resource_type to "raw" for documents.
             resource_type: "raw",
-            // Use the original filename to ensure correct extension on download.
             public_id: sanitizedFilename,
             use_filename: true,
             unique_filename: true,
@@ -63,6 +62,10 @@ export async function POST(req: Request) {
             if (error) {
               console.error("Cloudinary Upload Error:", error);
               return reject(error);
+            }
+            // The 'result' can be undefined on failure, so we handle that case.
+            if (!result) {
+              return reject(new Error("Cloudinary upload failed: no result returned."));
             }
             resolve(result);
           }
@@ -90,12 +93,18 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, application }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) { // ✅ FIX 2: Replaced 'any' with the safer 'unknown' type.
     console.error("❌ Top-level catch block error:", err);
+    
+    // Type check to safely access the error message
+    let errorMessage = "An unknown error occurred.";
+    if (err instanceof Error) {
+        errorMessage = err.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: err.message || "An unknown error occurred." },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }
 }
-
