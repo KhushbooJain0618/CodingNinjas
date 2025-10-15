@@ -141,7 +141,19 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         setPendingApplications(data.pendingForms);
-        setCompletedApplications(data.completedForms);
+
+        // Filter completed applications to only show those updated in the last 45 days.
+        const now = new Date();
+        const fortyFiveDaysInMs = 45 * 24 * 60 * 60 * 1000;
+        
+        const recentCompletedApplications = data.completedForms.filter(
+          (app: Application) => {
+            const completedDate = new Date(app.updatedAt);
+            return (now.getTime() - completedDate.getTime()) < fortyFiveDaysInMs;
+          }
+        );
+
+        setCompletedApplications(recentCompletedApplications);
       }
     } catch (err) {
       console.error(err);
@@ -485,4 +497,3 @@ export default function AdminDashboard() {
     </>
   );
 }
-
