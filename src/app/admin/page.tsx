@@ -142,7 +142,6 @@ export default function AdminDashboard() {
       if (data.success) {
         setPendingApplications(data.pendingForms);
 
-        // Filter completed applications to only show those updated in the last 45 days.
         const now = new Date();
         const fortyFiveDaysInMs = 45 * 24 * 60 * 60 * 1000;
         
@@ -258,7 +257,14 @@ export default function AdminDashboard() {
       const blob = await response.blob();
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = filename || 'resume';
+
+      // ✨ FIX: Ensure the downloaded filename always ends with .pdf
+      let finalFilename = filename || 'resume';
+      if (!finalFilename.toLowerCase().endsWith('.pdf')) {
+        finalFilename += '.pdf';
+      }
+      
+      link.download = finalFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -381,7 +387,6 @@ export default function AdminDashboard() {
             <div className="w-24 h-1 bg-gradient-to-r from-orange-500 to-orange-600 mx-auto mt-4"></div>
           </div>
 
-          {/* --- Tab Switcher --- */}
           <div className="mb-10 flex justify-center">
             <div className="relative bg-zinc-900 p-1 rounded-full flex items-center border border-zinc-800">
               <span
@@ -406,13 +411,11 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* --- Content Area with Slide Transition --- */}
           <div className="relative w-full overflow-hidden">
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: activeTab === 'applications' ? 'translateX(0%)' : 'translateX(-100%)' }}
             >
-              {/* --- Applications Panel --- */}
               <div className="w-full flex-shrink-0">
                 <div className="space-y-12">
                   <section>
@@ -440,12 +443,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* --- Openings Panel --- */}
               <div className="w-full flex-shrink-0 px-4 md:px-8 lg:px-12">
                 <section>
                   <h2 className="text-2xl md:text-3xl font-bold text-white mb-10 text-center">Manage Career Openings</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    {/* Form Section */}
                     <div className="lg:col-span-1">
                       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 sticky top-8">
                         <h3 className="text-lg font-bold text-white mb-4">Add New Opening</h3>
@@ -458,7 +459,6 @@ export default function AdminDashboard() {
                         </form>
                       </div>
                     </div>
-                    {/* Openings List Section */}
                     <div className="lg:col-span-2">
                       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
                         <h3 className="text-lg font-bold text-white mb-4">Current Openings</h3>
@@ -497,3 +497,4 @@ export default function AdminDashboard() {
     </>
   );
 }
+
