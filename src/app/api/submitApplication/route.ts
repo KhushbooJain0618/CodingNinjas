@@ -77,7 +77,6 @@ export async function POST(req: Request) {
       // Define a more specific type for the Cloudinary response
       interface CloudinaryUploadResult {
         secure_url: string;
-        // Use 'unknown' instead of 'any' for better type safety
         [key: string]: unknown;
       }
 
@@ -93,11 +92,10 @@ export async function POST(req: Request) {
           const stream = cloudinary.uploader.upload_stream(
             {
               folder: "resumes",
-              // Use 'image' resource_type for direct viewability.
-              resource_type: "image",
+              // ✨ FIX: Change resource_type to "auto" to allow any file type
+              resource_type: "auto",
               unique_filename: true,
             },
-            // Explicitly type the callback parameters to avoid implicit 'any'
             (error?: CloudinaryError, result?: CloudinaryUploadResult) => {
               if (error) {
                 console.error("Cloudinary Upload Error:", error);
@@ -106,7 +104,6 @@ export async function POST(req: Request) {
               if (result) {
                 return resolve(result);
               }
-              // Handle the case where there's no error but also no result
               return reject(new Error("Cloudinary upload returned no result."));
             }
           );
