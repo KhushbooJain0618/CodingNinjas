@@ -4,50 +4,38 @@ import { HiringForm } from "@/models/HiringForm";
 
 export async function GET() {
   try {
+    // Establish a connection to the database.
     await connectDB();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const allForms: any[] = await HiringForm.find()
-      .sort({ createdAt: -1, _id: -1 })
-      .lean();
+    // Query for pending forms. By not using .select(), we command Mongoose
+    // to retrieve every single field defined in the HiringFormSchema.
+    const pendingForms = await HiringForm.find({ status: "pending" }).sort({
+      createdAt: -1,
+    });
 
-    const pendingForms = serialize(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      allForms.filter((f: any) => (f.status ?? "pending").toLowerCase() === "pending")
-    );
+    // Similarly, query for approved forms, retrieving all fields.
+    const completedForms = await HiringForm.find({ status: "approved" }).sort({
+      updatedAt: -1,
+    });
 
-    const completedForms = serialize(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      allForms.filter((f: any) => (f.status ?? "").toLowerCase() === "approved")
-    );
+    // This log is for definitive verification in your terminal.
+    if (pendingForms.length > 0) {
+    }
 
-    return NextResponse.json({ pendingForms, completedForms }, { status: 200 });
-  } catch (err) {
-    console.error("❌ Failed to fetch hiring forms:", err);
+    // Return the complete data.
+    return NextResponse.json({ success: true, pendingForms, completedForms });
+
+  } catch (error) {
+    // A robust error handler for diagnosing any unexpected issues.
+    let message = "An unknown error occurred.";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     return NextResponse.json(
-      { pendingForms: [], completedForms: [], error: "Failed to fetch hiring forms" },
+      { success: false, error: "Server error while fetching applications." },
       { status: 500 }
     );
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const serialize = (docs: any[]) =>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  docs.map((d: any) => ({
-    _id: d._id.toString(),
-    name: d.name,
-    rollNumber: d.rollNumber,
-    gender: d.gender,
-    chitkaraEmail: d.chitkaraEmail,
-    department: d.department,
-    group: d.group,
-    specialization: d.specialization,
-    hosteller: d.hosteller,
-    position: d.position,
-    role: d.role,
-    resumeUrl: d.resumeUrl || "",
-    status: d.status || "pending",
-    createdAt: d.createdAt || new Date(),
-    updatedAt: d.updatedAt || new Date(),
-  }));

@@ -3,7 +3,10 @@ import { SignJWT } from "jose";
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-const ADMIN_SECRET = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET || "adminsupersecret");
+
+// --- CHANGE #1: Use the same secret as your middleware ---
+// This ensures the token can be verified correctly.
+const USER_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "supersecretkey");
 
 export async function POST(req: Request) {
   try {
@@ -13,16 +16,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    // ✅ Validate admin credentials
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       const token = await new SignJWT({ role: "admin", email })
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("2h")
-        .sign(ADMIN_SECRET);
+        .sign(USER_SECRET); // Use the unified secret here
 
-      // ✅ Set HTTP-only cookie
       const res = NextResponse.json({ message: "Admin signed in successfully" }, { status: 200 });
-      res.cookies.set("admin_token", token, {
+
+      // --- CHANGE #2: Set the cookie name to "token" ---
+      // This matches what your middleware is looking for.
+      res.cookies.set("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -39,5 +43,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
-
