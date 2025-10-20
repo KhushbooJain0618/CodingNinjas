@@ -17,7 +17,7 @@ interface Application {
   position: string;
   role: string;
   resumeUrl?: string;
-  status: "pending" | "done";
+  status: "pending" | "approved" | "done"; // Adjusted status type
   createdAt: string;
   updatedAt: string;
 }
@@ -132,7 +132,6 @@ export default function AdminDashboard() {
   const [visiblePendingCount, setVisiblePendingCount] = useState(ITEMS_PER_PAGE);
   const [visibleCompletedCount, setVisibleCompletedCount] = useState(ITEMS_PER_PAGE);
 
-  // ✨ ADDED: State for filters
   const [pendingFilter, setPendingFilter] = useState({ role: "", position: "" });
   const [completedFilter, setCompletedFilter] = useState({ role: "", position: "" });
 
@@ -143,13 +142,11 @@ export default function AdminDashboard() {
     );
   }, []);
 
-  // ✨ ADDED: Memoized lists for filter options
   const pendingRoles = useMemo(() => [...new Set(pendingApplications.map(app => app.role))], [pendingApplications]);
   const pendingPositions = useMemo(() => [...new Set(pendingApplications.map(app => app.position))], [pendingApplications]);
   const completedRoles = useMemo(() => [...new Set(completedApplications.map(app => app.role))], [completedApplications]);
   const completedPositions = useMemo(() => [...new Set(completedApplications.map(app => app.position))], [completedApplications]);
 
-  // ✨ ADDED: Memoized filtering logic
   const filteredPendingApps = useMemo(() => {
     return pendingApplications.filter(app => {
       const roleMatch = pendingFilter.role ? app.role === pendingFilter.role : true;
@@ -166,7 +163,6 @@ export default function AdminDashboard() {
     });
   }, [completedApplications, completedFilter]);
   
-  // ✨ ADDED: Reset pagination when filters change
   useEffect(() => {
     setVisiblePendingCount(ITEMS_PER_PAGE);
   }, [pendingFilter]);
@@ -189,7 +185,7 @@ export default function AdminDashboard() {
         const recentCompletedApplications = data.completedForms.filter(
           (app: Application) => {
             const completedDate = new Date(app.updatedAt);
-            return now.getTime() - completedDate.getTime() < fortyFiveDaysInMs;
+            return (now.getTime() - completedDate.getTime()) < fortyFiveDaysInMs;
           }
         );
 
@@ -242,14 +238,24 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/admin/toggleStatus/${id}`, {
         method: "PATCH",
       });
+      
       const data = await res.json();
+
       if (data.success) {
         fetchApplications();
+        
+        // ✨ Check for the new emailSent flag and show an alert
+        if (data.emailSent) {
+          alert("Welcome email sent successfully!");
+        }
+
       } else {
         console.error("Failed to update status:", data.error);
+        alert(`Error: ${data.error}`);
       }
     } catch (err) {
       console.error("Error updating application status:", err);
+      alert("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -447,7 +453,7 @@ export default function AdminDashboard() {
                             : "bg-yellow-500 hover:bg-yellow-600"
                         }`}
                       >
-                        {isPending ? "Done" : "Pending"}
+                        {isPending ? "Approve" : "To Pending"}
                       </button>
                       <button
                         onClick={() => openDeleteModal(app._id, "application")}
@@ -568,7 +574,6 @@ export default function AdminDashboard() {
                                 {filteredPendingApps.length}
                             </span>
                         </div>
-                         {/* ✨ ADDED: Filter controls */}
                         <div className="flex items-center gap-4">
                             <select value={pendingFilter.role} onChange={(e) => setPendingFilter(prev => ({...prev, role: e.target.value}))} className="bg-zinc-800 border-zinc-700 border text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5">
                                 <option value="">All Roles</option>
@@ -632,7 +637,6 @@ export default function AdminDashboard() {
                                 {filteredCompletedApps.length}
                             </span>
                         </div>
-                         {/* ✨ ADDED: Filter controls */}
                         <div className="flex items-center gap-4">
                             <select value={completedFilter.role} onChange={(e) => setCompletedFilter(prev => ({...prev, role: e.target.value}))} className="bg-zinc-800 border-zinc-700 border text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5">
                                 <option value="">All Roles</option>
