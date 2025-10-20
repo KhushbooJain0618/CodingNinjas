@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent, useMemo } from "react";
 
 // --- Interfaces ---
 interface Application {
@@ -112,12 +112,8 @@ const TrashIcon = () => (
 
 // --- Main Dashboard Component ---
 export default function AdminDashboard() {
-  const [pendingApplications, setPendingApplications] = useState<Application[]>(
-    []
-  );
-  const [completedApplications, setCompletedApplications] = useState<
-    Application[]
-  >([]);
+  const [pendingApplications, setPendingApplications] = useState<Application[]>([]);
+  const [completedApplications, setCompletedApplications] = useState<Application[]>([]);
   const [careers, setCareers] = useState<Career[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -130,15 +126,15 @@ export default function AdminDashboard() {
   const [newCareerTitle, setNewCareerTitle] = useState("");
   const [newCareerRole, setNewCareerRole] = useState("");
   const [isAddingCareer, setIsAddingCareer] = useState(false);
-  const [activeTab, setActiveTab] = useState<"applications" | "openings">(
-    "applications"
-  );
+  const [activeTab, setActiveTab] = useState<"applications" | "openings">("applications");
   
   const ITEMS_PER_PAGE = 10;
-  const [visiblePendingCount, setVisiblePendingCount] =
-    useState(ITEMS_PER_PAGE);
-  const [visibleCompletedCount, setVisibleCompletedCount] =
-    useState(ITEMS_PER_PAGE);
+  const [visiblePendingCount, setVisiblePendingCount] = useState(ITEMS_PER_PAGE);
+  const [visibleCompletedCount, setVisibleCompletedCount] = useState(ITEMS_PER_PAGE);
+
+  // ✨ ADDED: State for filters
+  const [pendingFilter, setPendingFilter] = useState({ role: "", position: "" });
+  const [completedFilter, setCompletedFilter] = useState({ role: "", position: "" });
 
   useEffect(() => {
     setMounted(true);
@@ -146,6 +142,39 @@ export default function AdminDashboard() {
       setLoading(false)
     );
   }, []);
+
+  // ✨ ADDED: Memoized lists for filter options
+  const pendingRoles = useMemo(() => [...new Set(pendingApplications.map(app => app.role))], [pendingApplications]);
+  const pendingPositions = useMemo(() => [...new Set(pendingApplications.map(app => app.position))], [pendingApplications]);
+  const completedRoles = useMemo(() => [...new Set(completedApplications.map(app => app.role))], [completedApplications]);
+  const completedPositions = useMemo(() => [...new Set(completedApplications.map(app => app.position))], [completedApplications]);
+
+  // ✨ ADDED: Memoized filtering logic
+  const filteredPendingApps = useMemo(() => {
+    return pendingApplications.filter(app => {
+      const roleMatch = pendingFilter.role ? app.role === pendingFilter.role : true;
+      const positionMatch = pendingFilter.position ? app.position === pendingFilter.position : true;
+      return roleMatch && positionMatch;
+    });
+  }, [pendingApplications, pendingFilter]);
+
+  const filteredCompletedApps = useMemo(() => {
+    return completedApplications.filter(app => {
+      const roleMatch = completedFilter.role ? app.role === completedFilter.role : true;
+      const positionMatch = completedFilter.position ? app.position === completedFilter.position : true;
+      return roleMatch && positionMatch;
+    });
+  }, [completedApplications, completedFilter]);
+  
+  // ✨ ADDED: Reset pagination when filters change
+  useEffect(() => {
+    setVisiblePendingCount(ITEMS_PER_PAGE);
+  }, [pendingFilter]);
+
+  useEffect(() => {
+    setVisibleCompletedCount(ITEMS_PER_PAGE);
+  }, [completedFilter]);
+
 
   const fetchApplications = async () => {
     try {
@@ -530,28 +559,40 @@ export default function AdminDashboard() {
               <div className="w-full flex-shrink-0">
                 <div className="space-y-12">
                   <section>
-                    <div className="flex items-center gap-3 mb-6">
-                      <h2 className="text-2xl md:text-3xl font-bold text-white">
-                        Pending Applications
-                      </h2>
-                      <span className="px-3 py-1 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-500 text-sm font-semibold">
-                        {pendingApplications.length}
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                Pending Applications
+                            </h2>
+                            <span className="px-3 py-1 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-500 text-sm font-semibold">
+                                {filteredPendingApps.length}
+                            </span>
+                        </div>
+                         {/* ✨ ADDED: Filter controls */}
+                        <div className="flex items-center gap-4">
+                            <select value={pendingFilter.role} onChange={(e) => setPendingFilter(prev => ({...prev, role: e.target.value}))} className="bg-zinc-800 border-zinc-700 border text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5">
+                                <option value="">All Roles</option>
+                                {pendingRoles.map(role => <option key={role} value={role}>{role}</option>)}
+                            </select>
+                             <select value={pendingFilter.position} onChange={(e) => setPendingFilter(prev => ({...prev, position: e.target.value}))} className="bg-zinc-800 border-zinc-700 border text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5">
+                                <option value="">All Positions</option>
+                                {pendingPositions.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                            </select>
+                        </div>
                     </div>
-                    {pendingApplications.length === 0 ? (
+                    {filteredPendingApps.length === 0 ? (
                       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 text-center">
                         <p className="text-gray-400">
-                          No pending applications.
+                          No matching pending applications found.
                         </p>
                       </div>
                     ) : (
                       <>
                         {renderTable(
-                          pendingApplications.slice(0, visiblePendingCount),
+                          filteredPendingApps.slice(0, visiblePendingCount),
                           true
                         )}
-                        {/* ✨ MODIFIED: Button container with View More/Less logic */}
-                        {pendingApplications.length > ITEMS_PER_PAGE && (
+                        {filteredPendingApps.length > ITEMS_PER_PAGE && (
                           <div className="mt-6 flex justify-center gap-4">
                             {visiblePendingCount > ITEMS_PER_PAGE && (
                               <button
@@ -563,7 +604,7 @@ export default function AdminDashboard() {
                                 View Less
                               </button>
                             )}
-                            {pendingApplications.length >
+                            {filteredPendingApps.length >
                               visiblePendingCount && (
                               <button
                                 onClick={() =>
@@ -582,31 +623,43 @@ export default function AdminDashboard() {
                     )}
                   </section>
                   <section>
-                    <div className="flex items-center gap-3 mb-6">
-                      <h2 className="text-2xl md:text-3xl font-bold text-white">
-                        Completed Applications
-                      </h2>
-                      <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full text-green-500 text-sm font-semibold">
-                        {completedApplications.length}
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                Completed Applications
+                            </h2>
+                            <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full text-green-500 text-sm font-semibold">
+                                {filteredCompletedApps.length}
+                            </span>
+                        </div>
+                         {/* ✨ ADDED: Filter controls */}
+                        <div className="flex items-center gap-4">
+                            <select value={completedFilter.role} onChange={(e) => setCompletedFilter(prev => ({...prev, role: e.target.value}))} className="bg-zinc-800 border-zinc-700 border text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5">
+                                <option value="">All Roles</option>
+                                {completedRoles.map(role => <option key={role} value={role}>{role}</option>)}
+                            </select>
+                             <select value={completedFilter.position} onChange={(e) => setCompletedFilter(prev => ({...prev, position: e.target.value}))} className="bg-zinc-800 border-zinc-700 border text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5">
+                                <option value="">All Positions</option>
+                                {completedPositions.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                            </select>
+                        </div>
                     </div>
-                    {completedApplications.length === 0 ? (
+                    {filteredCompletedApps.length === 0 ? (
                       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 text-center">
                         <p className="text-gray-400">
-                          No completed applications.
+                          No matching completed applications found.
                         </p>
                       </div>
                     ) : (
                       <>
                         {renderTable(
-                          completedApplications.slice(
+                          filteredCompletedApps.slice(
                             0,
                             visibleCompletedCount
                           ),
                           false
                         )}
-                        {/* ✨ MODIFIED: Button container with View More/Less logic */}
-                        {completedApplications.length > ITEMS_PER_PAGE && (
+                        {filteredCompletedApps.length > ITEMS_PER_PAGE && (
                           <div className="mt-6 flex justify-center gap-4">
                             {visibleCompletedCount > ITEMS_PER_PAGE && (
                               <button
@@ -618,7 +671,7 @@ export default function AdminDashboard() {
                                 View Less
                               </button>
                             )}
-                            {completedApplications.length >
+                            {filteredCompletedApps.length >
                               visibleCompletedCount && (
                               <button
                                 onClick={() =>
