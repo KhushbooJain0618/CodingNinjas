@@ -3,19 +3,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { HiringForm } from "@/models/HiringForm";
-import { Resend } from 'resend';
-
-// Initialize Resend with your API key from .env file
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from 'nodemailer';
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> } // The params object is a Promise
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    // FIX: Await the params object before accessing its properties
     const { id } = await context.params;
 
     const application = await HiringForm.findById(id);
@@ -27,20 +23,35 @@ export async function PATCH(
     }
     
     const originalStatus = application.status;
-    let emailSent = false; // Flag to track if the email was sent
+    let emailSent = false;
 
-    // Toggle the status
     application.status =
       application.status === "pending" ? "approved" : "pending";
     await application.save();
 
-    // Conditionally send email only when approving
     if (originalStatus === "pending" && application.status === "approved") {
       try {
-        await resend.emails.send({
-          // FIX: Use the required format for testing or a verified domain
-          from: 'onboarding@resend.dev',
-          to: [application.chitkaraEmail],
+        const SMTP_USER = process.env.SMTP_USER;
+        const SMTP_PASS = process.env.SMTP_PASS; // For Gmail, this is an App Password
+        const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'The CN_CUIET Team';
+
+        if (!SMTP_USER || !SMTP_PASS) {
+           throw new Error("SMTP environment variables (SMTP_USER, SMTP_PASS) are not set.");
+        }
+
+        // Configure Nodemailer transporter (example uses Gmail)
+        let transporter = nodemailer.createTransport({
+          service: "gmail", // Use "gmail", "outlook", etc. or custom host/port
+          auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+          },
+        });
+
+        // Define email options
+        let mailOptions = {
+          from: `"${SMTP_FROM_NAME}" <${SMTP_USER}>`,
+          to: application.chitkaraEmail,
           subject: 'Welcome Aboard! Your Application is Approved 🎉',
           html: `
             <h1>Congratulations, ${application.name}!</h1>
@@ -48,17 +59,19 @@ export async function PATCH(
             <p>Welcome to the team! We will contact you soon with the next steps.</p>
             <br/>
             <p>Best regards,</p>
-            <p>The CN_CUIET Team</p>
+            <p>${SMTP_FROM_NAME}</p>
           `,
-        });
-        emailSent = true; // Set flag to true on success
+        };
+
+        // Send the email
+        await transporter.sendMail(mailOptions);
+        
+        emailSent = true;
       } catch (emailError) {
         console.error("Email sending failed:", emailError);
-        // We log the error but don't stop the process
       }
     }
 
-    // Return a success response, including the email status
     return NextResponse.json({ success: true, status: application.status, emailSent });
   } catch (err: unknown) {
     let message = "Unknown error occurred";
